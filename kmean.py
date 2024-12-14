@@ -1,19 +1,27 @@
-import matplotlib.pyplot as plt
-from sklearn.cluster import KMeans
+import streamlit as st
 import pandas as pd
 import numpy as np
-import streamlit as st
+from sklearn.cluster import KMeans
+import matplotlib.pyplot as plt
 
+# Function to find the optimal number of clusters using the Elbow Method by analyzing slopes
 def find_optimal_k(data, max_k):
     wcss = []
+    
     for k in range(1, max_k + 1):
         kmeans = KMeans(n_clusters=k, random_state=42)
         kmeans.fit(data)
         wcss.append(kmeans.inertia_)
-    x = range(1, max_k + 1) 
-    wcss_diff = np.diff(wcss) 
-    wcss_diff2 = np.diff(wcss_diff)
-    elbow_index = np.argmin(wcss_diff2) + 2
+    
+    # Calculate the slopes between consecutive points
+    slopes = np.diff(wcss)
+    
+    # Calculate the changes in slopes (second derivative)
+    slope_changes = np.diff(slopes)
+    
+    # Find the index of the maximum change in slope (most significant elbow point)
+    elbow_index = np.argmax(np.abs(slope_changes)) + 2 
+    
     return elbow_index
 
 # Streamlit app
@@ -24,7 +32,7 @@ uploaded_file = st.file_uploader("Upload your dataset (CSV file)", type=["csv"])
 if uploaded_file is not None:
     data = pd.read_csv(uploaded_file)
     
-    # Automatically select only the numeric columns 
+    # Automatically select only the numeric columns
     numeric_data = data.select_dtypes(include=[np.number])
     
     # Input for max_k
